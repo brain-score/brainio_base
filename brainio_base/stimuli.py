@@ -2,7 +2,8 @@ import pandas as pd
 
 
 class StimulusSet(pd.DataFrame):
-    _metadata = ["name", "get_image", "image_paths"]
+    # http://pandas.pydata.org/pandas-docs/stable/development/extending.html#subclassing-pandas-data-structures
+    _metadata = pd.DataFrame._metadata + ["identifier", "get_image", "image_paths"]
 
     @property
     def _constructor(self):
