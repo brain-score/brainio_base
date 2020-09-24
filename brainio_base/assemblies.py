@@ -192,6 +192,11 @@ class ModelFeaturesAssembly(NeuroidAssembly):
     pass
 
 
+class PropertyAssembly(DataAssembly):
+    """A PropertyAssembly is a DataAssembly containing single neuronal properties data.  """
+    pass
+
+
 def coords_for_dim(xr_data, dim, exclude_indexes=True):
     result = OrderedDict()
     for key, value in xr_data.coords.variables.items():
