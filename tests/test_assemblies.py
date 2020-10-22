@@ -3,6 +3,30 @@ import pytest
 from brainio_base.assemblies import DataAssembly
 
 
+class TestIndex:
+    def test_single_element(self):
+        d = DataAssembly([0], coords={'coordA': ('dim', [0]), 'coordB': ('dim', [1])}, dims=['dim'])
+        d.sel(coordA=0)
+        d.sel(coordB=1)
+
+    def test_multi_elements(self):
+        d = DataAssembly([0, 1, 2, 3, 4],
+                         coords={'coordA': ('dim', [0, 1, 2, 3, 4]),
+                                 'coordB': ('dim', [1, 2, 3, 4, 5])},
+                         dims=['dim'])
+        d.sel(coordA=0)
+        d.sel(coordA=4)
+        d.sel(coordB=1)
+        d.sel(coordB=5)
+
+    def test_incorrect_coord(self):
+        d = DataAssembly([0], coords={'coordA': ('dim', [0]), 'coordB': ('dim', [1])}, dims=['dim'])
+        with pytest.raises(KeyError):
+            d.sel(coordA=1)
+        with pytest.raises(KeyError):
+            d.sel(coordB=0)
+
+
 class TestMultiGroupby:
     def test_single_dimension(self):
         d = DataAssembly([[1, 2, 3], [4, 5, 6]], coords={'a': ['a', 'b'], 'b': ['x', 'y', 'z']}, dims=['a', 'b'])
