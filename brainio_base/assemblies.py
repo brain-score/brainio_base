@@ -21,8 +21,10 @@ class DataAssembly(DataArray):
     an analysis or benchmarking task.  """
 
     def __init__(self, *args, **kwargs):
-        super(DataAssembly, self).__init__(*args, **kwargs)
-        gather_indexes(self)
+        temp = DataArray.__new__(DataArray, *args, **kwargs)
+        DataArray.__init__(temp, *args, **kwargs)
+        temp = gather_indexes(temp)
+        super(DataAssembly, self).__init__(temp)
 
     def multi_groupby(self, group_coord_names, *args, **kwargs):
         multi_group_name = "multi_group"
@@ -249,8 +251,9 @@ class GroupbyBridge(object):
         split_coords = list(map(list, zip(*split_coords)))  # transpose
         for coord_name, coord in zip(self.group_coord_names, split_coords):
             result.coords[coord_name] = (self.multi_group_name, coord)
-        result = xr.DataArray(result.reset_index(self.multi_group_name, drop=True))
-        result = type(self)(result.set_index(append=True, **{self.multi_group_name: list(self.group_coord_names)}))
+        result_type = type(result)
+        result = xr.DataArray(result).reset_index(self.multi_group_name, drop=True)
+        result = result_type(result.set_index(append=True, **{self.multi_group_name: list(self.group_coord_names)}))
         result = result.rename({self.multi_group_name: self.dim})
         return result
 
