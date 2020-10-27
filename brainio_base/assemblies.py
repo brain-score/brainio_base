@@ -20,6 +20,8 @@ class DataAssembly(DataArray):
     """A DataAssembly represents a set of data a researcher wishes to work with for
     an analysis or benchmarking task.  """
 
+    __slots__ = ()
+
     def __init__(self, *args, **kwargs):
         temp = DataArray.__new__(DataArray, *args, **kwargs)
         DataArray.__init__(temp, *args, **kwargs)
@@ -27,6 +29,8 @@ class DataAssembly(DataArray):
         super(DataAssembly, self).__init__(temp)
 
     def multi_groupby(self, group_coord_names, *args, **kwargs):
+        if len(group_coord_names) < 2:
+            raise ValueError("The multi_groupby method requires multiple coordinates (or MultiIndex levels) to group over.")
         multi_group_name = "multi_group"
         dim = self._dim_of_group_coords(group_coord_names)
         tmp_assy = self._join_group_coords(dim, group_coord_names, multi_group_name)
