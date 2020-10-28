@@ -95,7 +95,9 @@ class DataAssembly(DataArray):
         # making this a DataArray right away and then inserting through .loc would slow things down
         shapes = {group: len(list(itertools.chain(*indices.values()))) for group, indices in result_indices.items()}
         result = np.zeros(list(shapes.values()))
-        result_coords = {coord: (dims, np.array([None] * shapes[group_dims[dims]]))
+        result_coords = {coord: (dims, (np.array([None] * shapes[group_dims[dims]])
+                                        # deal with non-indexing coords (typically remnants from `.sel(coord=x)`)
+                                        if dims else value))
                          for coord, (dims, value) in coords.items()}
         for values in itertools.product(*groups.values()):
             group_values = dict(zip(groups.keys(), values))
@@ -103,7 +105,9 @@ class DataAssembly(DataArray):
             values_indices = indexify(self_indices)
             cells = self.values[values_indices]  # using DataArray would slow things down. thus we pass coords as kwargs
             cells = simplify(cells)
-            cell_coords = {coord: (dims, value[self_indices[group_dims[dims]]])
+            cell_coords = {coord: (dims,
+                                   value[self_indices[group_dims[dims]]]
+                                   if dims else value)  # deal with non-indexing coords
                            for coord, (dims, value) in coords.items()}
             cell_coords = {coord: (dims, simplify(value)) for coord, (dims, value) in cell_coords.items()}
 
@@ -114,6 +118,8 @@ class DataAssembly(DataArray):
             result[indexify(result_idx)] = merge
             for coord, (dims, value) in cell_coords.items():
                 assert dims == result_coords[coord][0]
+                if not dims:  # non-indexing coord
+                    continue
                 coord_index = result_idx[group_dims[dims]]
                 result_coords[coord][1][coord_index] = value
 

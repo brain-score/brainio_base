@@ -99,6 +99,17 @@ class TestMultiDimApply:
         g = d.multi_dim_apply(['b', 'a'], lambda x, **_: x)
         assert g.equals(d)
 
+    def test_nonindex_coord(self):
+        d = DataAssembly([[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12]],
+                         coords={'a': ['a', 'b', 'c', 'd'],
+                                 'b': ['x', 'y', 'z'],
+                                 # additional coordinate that has no index values.
+                                 # This could e.g. be the result of `.sel(c='remnant')`
+                                 'c': 'remnant'},
+                         dims=['a', 'b'])
+        g = d.multi_dim_apply(['a', 'b'], lambda x, **_: x)
+        assert g.equals(d)  # also tests that `c` persists
+
     def test_subtract_mean(self):
         d = DataAssembly([[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12]],
                          coords={'a': ['a', 'b', 'c', 'd'],
