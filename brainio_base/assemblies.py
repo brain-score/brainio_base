@@ -178,29 +178,29 @@ class DataAssembly(DataArray):
 
 class BehavioralAssembly(DataAssembly):
     """A BehavioralAssembly is a DataAssembly containing behavioral data.  """
-    pass
+    __slots__ = ()
 
 
 class NeuroidAssembly(DataAssembly):
     """A NeuroidAssembly is a DataAssembly containing data recorded from either neurons
     or neuron analogues.  """
-    pass
+    __slots__ = ()
 
 
 class NeuronRecordingAssembly(NeuroidAssembly):
     """A NeuronRecordingAssembly is a NeuroidAssembly containing data recorded from neurons.  """
-    pass
+    __slots__ = ()
 
 
 class ModelFeaturesAssembly(NeuroidAssembly):
     """A ModelFeaturesAssembly is a NeuroidAssembly containing data captured from nodes in
     a machine learning model.  """
-    pass
+    __slots__ = ()
 
 
 class PropertyAssembly(DataAssembly):
     """A PropertyAssembly is a DataAssembly containing single neuronal properties data.  """
-    pass
+    __slots__ = ()
 
 
 def coords_for_dim(xr_data, dim, exclude_indexes=True):

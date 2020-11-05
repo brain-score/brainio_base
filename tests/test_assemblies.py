@@ -8,17 +8,6 @@ class TestMultiGroupby:
         d = DataAssembly([[1, 2, 3], [4, 5, 6]], coords={'a': ['alpha', 'beta'], 'b': ['x', 'y', 'z']}, dims=['a', 'b'])
         with pytest.raises(ValueError):
             g = d.multi_groupby(['a']).mean()
-        # print("\ntype(g):  ", type(g))
-        # print(g)
-        # d2 = DataAssembly([2, 5], coords={'a': ['alpha', 'beta']}, dims=['a'])
-        # print("\ntype(d2):  ", type(d2))
-        # print(d2)
-        # assert g.equals(d2)
-
-    # def test_single_dimension_int(self):
-    #     d = DataAssembly([[1, 2, 3], [4, 5, 6]], coords={'a': [1, 2], 'b': [3, 4, 5]}, dims=['a', 'b'])
-    #     g = d.multi_groupby(['a']).mean()
-    #     assert g.equals(DataAssembly([2., 5.], coords={'a': [1, 2]}, dims=['a']))
 
     def test_single_coord(self):
         d = DataAssembly([[1, 2, 3], [4, 5, 6]],
@@ -26,10 +15,6 @@ class TestMultiGroupby:
                          dims=['multi_dim', 'c'])
         with pytest.raises(ValueError):
             g = d.multi_groupby(['a']).mean()
-        # assert g.equals(DataAssembly([2, 5], coords={'multi_dim': ['a', 'b']}, dims=['multi_dim']))
-        # ideally, we would want `g.equals(DataAssembly([2, 5],
-        #   coords={'a': ('multi_dim', ['a', 'b']), 'b': ('multi_dim', ['c', 'c'])}, dims=['multi_dim']))`
-        # but this is fine for now.
 
     def test_single_dim_multi_coord(self):
         d = DataAssembly([1, 2, 3, 4, 5, 6],
