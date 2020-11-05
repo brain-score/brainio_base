@@ -3,7 +3,7 @@ from collections import OrderedDict, defaultdict
 import itertools
 import numpy as np
 import xarray as xr
-from xarray import DataArray
+from xarray import DataArray, IndexVariable
 
 
 class DataPoint(object):
@@ -283,11 +283,11 @@ def walk_coords(assembly):
     """
     coords = {}
 
-    for name, values in assembly.coords.items():
-        # partly borrowed from xarray.core.formatting#summarize_coord
-        is_index = name in assembly.dims
-        if is_index and values.variable.level_names:
-            for level in values.variable.level_names:
+    for name in assembly.coords.variables:
+        values = assembly.coords.variables[name]
+        is_index = isinstance(values, IndexVariable)
+        if is_index and values.level_names:
+            for level in values.level_names:
                 level_values = assembly.coords[level]
                 yield level, level_values.dims, level_values.values
         else:

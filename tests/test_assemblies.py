@@ -108,3 +108,14 @@ class TestMultiDimApply:
                                              'aa': ('a', ['a', 'a', 'b', 'b']),
                                              'b': ['x', 'y', 'z']},
                                      dims=['a', 'b']))
+
+
+    def test_multi_level(self):
+        d = DataAssembly([[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12], [13, 14, 15], [16, 17, 18]],
+                         coords={'up': ("a", ['alpha', 'alpha', 'beta', 'beta', 'beta', 'beta']),
+                                 'down': ("a", [1, 1, 1, 1, 2, 2]),
+                                 'sideways': ('b', ['x', 'y', 'z'])},
+                         dims=['a', 'b'])
+        g = d.multi_dim_apply(['a', 'b'], lambda x, **_: x)
+        assert g.equals(d)
+
