@@ -26,6 +26,9 @@ class DataAssembly(DataArray):
         temp = DataArray.__new__(DataArray, *args, **kwargs)
         DataArray.__init__(temp, *args, **kwargs)
         temp = gather_indexes(temp)
+        # This guarantees that DataAssemblies will always have all metadata as indexes.
+        # DataArray reset_index no longer has an inplace option, so an object that is a subclass
+        # of DataArray cannot modify itself in its __init__.
         super(DataAssembly, self).__init__(temp)
 
     def multi_groupby(self, group_coord_names, *args, **kwargs):

@@ -45,6 +45,7 @@ class TestMultiGroupby:
         g = d.multi_groupby(['a']).mean(...)
         assert g.equals(DataAssembly([2., 5.], coords={'a': [1, 2]}, dims=['a']))
 
+    @pytest.mark.skip(reason="Skip until https://github.com/pydata/xarray/issues/3717 is fixed.")
     def test_single_coord(self):
         d = DataAssembly(da_gen(3, 7))
         g = d.multi_groupby(['greek']).mean(...)

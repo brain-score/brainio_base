@@ -11,7 +11,7 @@ requirements = [
     "pandas",
     "xarray",
     # test_requirements
-    "pytest"
+    "pytest",
 ]
 
 setup(
