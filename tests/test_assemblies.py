@@ -32,6 +32,30 @@ def da_gen(x, y):
     dims=(dim_set[0], dim_set[1])
   )
 
+class TestIndex:
+    def test_single_element(self):
+        d = DataAssembly([0], coords={'coordA': ('dim', [0]), 'coordB': ('dim', [1])}, dims=['dim'])
+        d.sel(coordA=0)
+        d.sel(coordB=1)
+
+    def test_multi_elements(self):
+        d = DataAssembly([0, 1, 2, 3, 4],
+                         coords={'coordA': ('dim', [0, 1, 2, 3, 4]),
+                                 'coordB': ('dim', [1, 2, 3, 4, 5])},
+                         dims=['dim'])
+        d.sel(coordA=0)
+        d.sel(coordA=4)
+        d.sel(coordB=1)
+        d.sel(coordB=5)
+
+    def test_incorrect_coord(self):
+        d = DataAssembly([0], coords={'coordA': ('dim', [0]), 'coordB': ('dim', [1])}, dims=['dim'])
+        with pytest.raises(KeyError):
+            d.sel(coordA=1)
+        with pytest.raises(KeyError):
+            d.sel(coordB=0)
+
+
 class TestMultiGroupby:
     # @pytest.mark.skip(reason="Skip until https://github.com/pydata/xarray/issues/3717 is fixed.")
     def test_single_dimension(self):
@@ -107,6 +131,17 @@ class TestMultiDimApply:
                          dims=['a', 'b'])
         g = d.multi_dim_apply(['b', 'a'], lambda x, **_: x)
         assert g.equals(d)
+
+    def test_nonindex_coord(self):
+        d = DataAssembly([[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12]],
+                         coords={'a': ['a', 'b', 'c', 'd'],
+                                 'b': ['x', 'y', 'z'],
+                                 # additional coordinate that has no index values.
+                                 # This could e.g. be the result of `.sel(c='remnant')`
+                                 'c': 'remnant'},
+                         dims=['a', 'b'])
+        g = d.multi_dim_apply(['a', 'b'], lambda x, **_: x)
+        assert g.equals(d)  # also tests that `c` persists
 
     def test_subtract_mean(self):
         d = DataAssembly([[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12]],
