@@ -30,7 +30,7 @@ class DataAssembly(DataArray):
 
     def multi_groupby(self, group_coord_names, *args, **kwargs):
         if len(group_coord_names) < 2:
-            raise ValueError("The multi_groupby method requires multiple coordinates (or MultiIndex levels) to group over.")
+            return self.groupby(group_coord_names[0], *args, **kwargs)
         multi_group_name = "multi_group"
         dim = self._dim_of_group_coords(group_coord_names)
         tmp_assy = self._join_group_coords(dim, group_coord_names, multi_group_name)

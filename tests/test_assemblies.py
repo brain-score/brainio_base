@@ -1,20 +1,57 @@
 import pytest
+import string
+import unicodedata
+
+from xarray import DataArray
 
 from brainio_base.assemblies import DataAssembly
 
+dim_set = list(string.ascii_lowercase)
+
+coord_set = {
+  "greek": [unicodedata.name(chr(code)).split()[3].lower() for code in range(945, 970)],
+  "colors": ["red", "green", "blue", "purple", "yellow", "orange"],
+  "compass": ["north", "south", "east", "west", "northeast", "southeast", "southwest", "northwest"],
+  "integer": list(range(100)),
+}
+
+
+def rect(x, y):
+  return [list(range(j*y, j*y+y)) for j in range(x)]
+
+
+def da_gen(x, y):
+  return DataArray(
+    data=rect(x, y),
+    coords={
+      list(coord_set)[0]: (dim_set[0], coord_set[list(coord_set)[0]][:x]),
+      list(coord_set)[1]: (dim_set[0], coord_set[list(coord_set)[1]][:x]),
+      list(coord_set)[2]: (dim_set[1], coord_set[list(coord_set)[2]][:y]),
+      list(coord_set)[3]: (dim_set[1], coord_set[list(coord_set)[3]][:y]),
+    },
+    dims=(dim_set[0], dim_set[1])
+  )
 
 class TestMultiGroupby:
+    # @pytest.mark.skip(reason="Skip until https://github.com/pydata/xarray/issues/3717 is fixed.")
     def test_single_dimension(self):
-        d = DataAssembly([[1, 2, 3], [4, 5, 6]], coords={'a': ['alpha', 'beta'], 'b': ['x', 'y', 'z']}, dims=['a', 'b'])
-        with pytest.raises(ValueError):
-            g = d.multi_groupby(['a']).mean()
+        d = DataAssembly([[1, 2, 3], [4, 5, 6]], coords={'a': ['a', 'b'], 'b': ['x', 'y', 'z']}, dims=['a', 'b'])
+        g = d.multi_groupby(['a']).mean(...)
+        assert g.equals(DataAssembly([2, 5], coords={'a': ['a', 'b']}, dims=['a']))
+
+    # @pytest.mark.skip(reason="Skip until https://github.com/pydata/xarray/issues/3717 is fixed.")
+    def test_single_dimension_int(self):
+        d = DataAssembly([[1, 2, 3], [4, 5, 6]], coords={'a': [1, 2], 'b': [3, 4, 5]}, dims=['a', 'b'])
+        g = d.multi_groupby(['a']).mean(...)
+        assert g.equals(DataAssembly([2., 5.], coords={'a': [1, 2]}, dims=['a']))
 
     def test_single_coord(self):
-        d = DataAssembly([[1, 2, 3], [4, 5, 6]],
-                         coords={'a': ('multi_dim', ['a', 'b']), 'b': ('multi_dim', ['c', 'c']), 'c': ['x', 'y', 'z']},
-                         dims=['multi_dim', 'c'])
-        with pytest.raises(ValueError):
-            g = d.multi_groupby(['a']).mean()
+        d = DataAssembly(da_gen(3, 7))
+        g = d.multi_groupby(['greek']).mean(...)
+        assert g.equals(DataAssembly([[3], [10], [17]], coords={'greek': ('a', ['alpha', 'beta', 'gamma'])}, dims=['a', 'b']))
+        # ideally, we would want `g.equals(DataAssembly([2, 5],
+        #   coords={'a': ('multi_dim', ['a', 'b']), 'b': ('multi_dim', ['c', 'c'])}, dims=['multi_dim']))`
+        # but this is fine for now.
 
     def test_single_dim_multi_coord(self):
         d = DataAssembly([1, 2, 3, 4, 5, 6],
@@ -37,17 +74,6 @@ class TestMultiGroupby:
         assert g.equals(DataAssembly([2., 5.],
                                      coords={'a': ('multi_dim', [1, 1]), 'b': ('multi_dim', ['a', 'b'])},
                                      dims=['multi_dim']))
-
-    @pytest.mark.skip(reason="not implemented")
-    def test_multi_dim(self):
-        d = DataAssembly([[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12]],
-                         coords={'a': ['alpha', 'alpha', 'beta', 'beta'],
-                                 'b': ['x', 'y', 'z']},
-                         dims=['a', 'b'])
-        g = d.multi_groupby(['a', 'b']).mean()
-        assert g.equals(DataAssembly([2.5, 3.5, 4.5], [8.5, 9.5, 10.5],
-                                     coords={'a': ['a', 'b'], 'b': ['x', 'y', 'z']},
-                                     dims=['a', 'b']))
 
     def test_two_coord(self):
         assy = DataAssembly([[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12], [13, 14, 15], [16, 17, 18]],
@@ -93,7 +119,6 @@ class TestMultiDimApply:
                                              'aa': ('a', ['a', 'a', 'b', 'b']),
                                              'b': ['x', 'y', 'z']},
                                      dims=['a', 'b']))
-
 
     def test_multi_level(self):
         d = DataAssembly([[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12], [13, 14, 15], [16, 17, 18]],
