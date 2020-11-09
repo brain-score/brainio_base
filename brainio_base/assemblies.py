@@ -23,8 +23,7 @@ class DataAssembly(DataArray):
     __slots__ = ()
 
     def __init__(self, *args, **kwargs):
-        temp = DataArray.__new__(DataArray, *args, **kwargs)
-        DataArray.__init__(temp, *args, **kwargs)
+        temp = DataArray(*args, **kwargs)
         temp = gather_indexes(temp)
         # This guarantees that DataAssemblies will always have all metadata as indexes.
         # DataArray reset_index no longer has an inplace option, so an object that is a subclass
