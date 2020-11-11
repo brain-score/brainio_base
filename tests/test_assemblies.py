@@ -1,29 +1,49 @@
 import pytest
+from xarray import DataArray
 
-from brainio_base.assemblies import DataAssembly
+from brainio_base.assemblies import DataAssembly, get_levels
 
-class TestIndex:
-    def test_single_element(self):
-        d = DataAssembly([0], coords={'coordA': ('dim', [0]), 'coordB': ('dim', [1])}, dims=['dim'])
-        d.sel(coordA=0)
-        d.sel(coordB=1)
 
-    def test_multi_elements(self):
-        d = DataAssembly([0, 1, 2, 3, 4],
-                         coords={'coordA': ('dim', [0, 1, 2, 3, 4]),
-                                 'coordB': ('dim', [1, 2, 3, 4, 5])},
-                         dims=['dim'])
-        d.sel(coordA=0)
-        d.sel(coordA=4)
-        d.sel(coordB=1)
-        d.sel(coordB=5)
+def test_get_levels():
+    assy = DataAssembly(
+        data=[[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12], [13, 14, 15], [16, 17, 18]],
+        coords={
+            'up': ("a", ['alpha', 'alpha', 'beta', 'beta', 'beta', 'beta']),
+            'down': ("a", [1, 1, 1, 1, 2, 2]),
+            'sideways': ('b', ['x', 'y', 'z'])
+        },
+        dims=['a', 'b']
+    )
+    assert get_levels(assy) == ["up", "down"]
 
-    def test_incorrect_coord(self):
-        d = DataAssembly([0], coords={'coordA': ('dim', [0]), 'coordB': ('dim', [1])}, dims=['dim'])
-        with pytest.raises(KeyError):
-            d.sel(coordA=1)
-        with pytest.raises(KeyError):
-            d.sel(coordB=0)
+def test_wrap_dataarray():
+    assy = DataAssembly(
+        data=[[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12], [13, 14, 15], [16, 17, 18]],
+        coords={
+            'up': ("a", ['alpha', 'alpha', 'beta', 'beta', 'beta', 'beta']),
+            'down': ("a", [1, 1, 1, 1, 2, 2]),
+            'sideways': ('b', ['x', 'y', 'z'])
+        },
+        dims=['a', 'b']
+    )
+    assert assy.coords.variables["a"].level_names == ["up", "down"]
+    da = DataArray(assy)
+    assert da.coords.variables["a"].level_names == ["up", "down"]
+
+
+def test_reset_index():
+    assy = DataAssembly(
+        data=[[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12], [13, 14, 15], [16, 17, 18]],
+        coords={
+            'up': ("a", ['alpha', 'alpha', 'beta', 'beta', 'beta', 'beta']),
+            'down': ("a", [1, 1, 1, 1, 2, 2]),
+            'sideways': ('b', ['x', 'y', 'z'])
+        },
+        dims=['a', 'b']
+    )
+    da = DataArray(assy)
+    da = da.reset_index(["up", "down"])
+    assert get_levels(da) == []
 
 
 class TestIndex:

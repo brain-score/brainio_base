@@ -301,3 +301,12 @@ def walk_coords(assembly):
         else:
             yield name, values.dims, values.values
     return coords
+
+
+def get_levels(assembly):
+    levels = []
+    for key, value in assembly.coords.variables.items():
+        if isinstance(value, IndexVariable) and value.level_names:
+            for level in value.level_names:
+                levels.append(level)
+    return levels
