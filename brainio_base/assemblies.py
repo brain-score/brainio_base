@@ -3,7 +3,7 @@ from collections import OrderedDict, defaultdict
 import itertools
 import numpy as np
 import xarray as xr
-from xarray import DataArray, IndexVariable
+from xarray import DataArray
 
 
 class DataPoint(object):
@@ -20,19 +20,11 @@ class DataAssembly(DataArray):
     """A DataAssembly represents a set of data a researcher wishes to work with for
     an analysis or benchmarking task.  """
 
-    __slots__ = ()
-
     def __init__(self, *args, **kwargs):
-        temp = DataArray(*args, **kwargs)
-        temp = gather_indexes(temp)
-        # This guarantees that DataAssemblies will always have all metadata as indexes.
-        # DataArray reset_index no longer has an inplace option, so an object that is a subclass
-        # of DataArray cannot modify itself in its __init__.
-        super(DataAssembly, self).__init__(temp)
+        super(DataAssembly, self).__init__(*args, **kwargs)
+        gather_indexes(self)
 
     def multi_groupby(self, group_coord_names, *args, **kwargs):
-        if len(group_coord_names) < 2:
-            return self.groupby(group_coord_names[0], *args, **kwargs)
         multi_group_name = "multi_group"
         dim = self._dim_of_group_coords(group_coord_names)
         tmp_assy = self._join_group_coords(dim, group_coord_names, multi_group_name)
@@ -186,29 +178,29 @@ class DataAssembly(DataArray):
 
 class BehavioralAssembly(DataAssembly):
     """A BehavioralAssembly is a DataAssembly containing behavioral data.  """
-    __slots__ = ()
+    pass
 
 
 class NeuroidAssembly(DataAssembly):
     """A NeuroidAssembly is a DataAssembly containing data recorded from either neurons
     or neuron analogues.  """
-    __slots__ = ()
+    pass
 
 
 class NeuronRecordingAssembly(NeuroidAssembly):
     """A NeuronRecordingAssembly is a NeuroidAssembly containing data recorded from neurons.  """
-    __slots__ = ()
+    pass
 
 
 class ModelFeaturesAssembly(NeuroidAssembly):
     """A ModelFeaturesAssembly is a NeuroidAssembly containing data captured from nodes in
     a machine learning model.  """
-    __slots__ = ()
+    pass
 
 
 class PropertyAssembly(DataAssembly):
     """A PropertyAssembly is a DataAssembly containing single neuronal properties data.  """
-    __slots__ = ()
+    pass
 
 
 def coords_for_dim(xr_data, dim, exclude_indexes=True):
@@ -229,7 +221,7 @@ def gather_indexes(xr_data):
         if coords:
             coords_d[dim] = list(coords.keys())
     if coords_d:
-        xr_data = xr_data.set_index(append=True, **coords_d)
+        xr_data.set_index(append=True, inplace=True, **coords_d)
     return xr_data
 
 
@@ -263,9 +255,8 @@ class GroupbyBridge(object):
         split_coords = list(map(list, zip(*split_coords)))  # transpose
         for coord_name, coord in zip(self.group_coord_names, split_coords):
             result.coords[coord_name] = (self.multi_group_name, coord)
-        result_type = type(result)
-        result = xr.DataArray(result).reset_index(self.multi_group_name, drop=True)
-        result = result_type(result.set_index(append=True, **{self.multi_group_name: list(self.group_coord_names)}))
+        result.reset_index(self.multi_group_name, drop=True, inplace=True)
+        result.set_index(append=True, inplace=True, **{self.multi_group_name: list(self.group_coord_names)})
         result = result.rename({self.multi_group_name: self.dim})
         return result
 
@@ -291,11 +282,11 @@ def walk_coords(assembly):
     """
     coords = {}
 
-    for name in assembly.coords.variables:
-        values = assembly.coords.variables[name]
-        is_index = isinstance(values, IndexVariable)
-        if is_index and values.level_names:
-            for level in values.level_names:
+    for name, values in assembly.coords.items():
+        # partly borrowed from xarray.core.formatting#summarize_coord
+        is_index = name in assembly.dims
+        if is_index and values.variable.level_names:
+            for level in values.variable.level_names:
                 level_values = assembly.coords[level]
                 yield level, level_values.dims, level_values.values
         else:

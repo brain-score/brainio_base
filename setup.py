@@ -9,7 +9,7 @@ with open('README.md') as readme_file:
 requirements = [
     "numpy",
     "pandas",
-    "xarray",
+    "xarray==0.12",
     # test_requirements
     "pytest",
 ]
