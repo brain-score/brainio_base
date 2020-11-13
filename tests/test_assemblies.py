@@ -1,7 +1,7 @@
 import pytest
 from xarray import DataArray
 
-from brainio_base.assemblies import DataAssembly, get_levels
+from brainio_base.assemblies import DataAssembly, get_levels, gather_indexes
 
 
 def test_get_levels():
@@ -16,7 +16,25 @@ def test_get_levels():
     )
     assert get_levels(assy) == ["up", "down"]
 
+
 def test_wrap_dataarray():
+    da = DataArray(
+        data=[[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12], [13, 14, 15], [16, 17, 18]],
+        coords={
+            'up': ("a", ['alpha', 'alpha', 'beta', 'beta', 'beta', 'beta']),
+            'down': ("a", [1, 1, 1, 1, 2, 2]),
+            'sideways': ('b', ['x', 'y', 'z'])
+        },
+        dims=['a', 'b']
+    )
+    assert "up" in da.coords
+    da = gather_indexes(da)
+    assert da.coords.variables["a"].level_names == ["up", "down"]
+    da = DataArray(da)
+    assert da.coords.variables["a"].level_names == ["up", "down"]
+
+
+def test_wrap_dataassembly():
     assy = DataAssembly(
         data=[[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12], [13, 14, 15], [16, 17, 18]],
         coords={
