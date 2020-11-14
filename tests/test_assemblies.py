@@ -18,34 +18,46 @@ def test_get_levels():
 
 
 def test_wrap_dataarray():
-    da = DataArray(
-        data=[[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12], [13, 14, 15], [16, 17, 18]],
-        coords={
-            'up': ("a", ['alpha', 'alpha', 'beta', 'beta', 'beta', 'beta']),
-            'down': ("a", [1, 1, 1, 1, 2, 2]),
-            'sideways': ('b', ['x', 'y', 'z'])
-        },
-        dims=['a', 'b']
-    )
+    from viztracer import VizTracer
+    with VizTracer(include_files=[
+        "/Users/jjpr/dev/brainio_base/brainio_base",
+        "/Users/jjpr/dev/brainio_base/tests",
+        "/Users/jjpr/anaconda/envs/brainio/lib/python3.7/site-packages/xarray"
+    ], output_file="test_wrap_dataarray.html") as tracer:
+        da = DataArray(
+            data=[[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12], [13, 14, 15], [16, 17, 18]],
+            coords={
+                'up': ("a", ['alpha', 'alpha', 'beta', 'beta', 'beta', 'beta']),
+                'down': ("a", [1, 1, 1, 1, 2, 2]),
+                'sideways': ('b', ['x', 'y', 'z'])
+            },
+            dims=['a', 'b']
+        )
+        db = gather_indexes(da)
+        dc = DataArray(db)
     assert "up" in da.coords
-    da = gather_indexes(da)
-    assert da.coords.variables["a"].level_names == ["up", "down"]
-    da = DataArray(da)
-    assert da.coords.variables["a"].level_names == ["up", "down"]
+    assert db.coords.variables["a"].level_names == ["up", "down"]
+    assert dc.coords.variables["a"].level_names == ["up", "down"]
 
 
 def test_wrap_dataassembly():
-    assy = DataAssembly(
-        data=[[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12], [13, 14, 15], [16, 17, 18]],
-        coords={
-            'up': ("a", ['alpha', 'alpha', 'beta', 'beta', 'beta', 'beta']),
-            'down': ("a", [1, 1, 1, 1, 2, 2]),
-            'sideways': ('b', ['x', 'y', 'z'])
-        },
-        dims=['a', 'b']
-    )
+    from viztracer import VizTracer
+    with VizTracer(include_files=[
+        "/Users/jjpr/dev/brainio_base/brainio_base",
+        "/Users/jjpr/dev/brainio_base/tests",
+        "/Users/jjpr/anaconda/envs/brainio/lib/python3.7/site-packages/xarray"
+    ], output_file="test_wrap_dataassembly.html") as tracer:
+        assy = DataAssembly(
+            data=[[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12], [13, 14, 15], [16, 17, 18]],
+            coords={
+                'up': ("a", ['alpha', 'alpha', 'beta', 'beta', 'beta', 'beta']),
+                'down': ("a", [1, 1, 1, 1, 2, 2]),
+                'sideways': ('b', ['x', 'y', 'z'])
+            },
+            dims=['a', 'b']
+        )
+        da = DataArray(assy)
     assert assy.coords.variables["a"].level_names == ["up", "down"]
-    da = DataArray(assy)
     assert da.coords.variables["a"].level_names == ["up", "down"]
 
 
