@@ -17,51 +17,85 @@ def test_get_levels():
     assert get_levels(assy) == ["up", "down"]
 
 
-def test_wrap_dataarray():
-    da = DataArray(
-        data=[[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12], [13, 14, 15], [16, 17, 18]],
-        coords={
-            'up': ("a", ['alpha', 'alpha', 'beta', 'beta', 'beta', 'beta']),
-            'down': ("a", [1, 1, 1, 1, 2, 2]),
-            'sideways': ('b', ['x', 'y', 'z'])
-        },
-        dims=['a', 'b']
-    )
-    assert "up" in da.coords
-    da = gather_indexes(da)
-    assert da.coords.variables["a"].level_names == ["up", "down"]
-    da = DataArray(da)
-    assert da.coords.variables["a"].level_names == ["up", "down"]
+class TestSubclassing:
+    def test_wrap_dataarray(self):
+        da = DataArray(
+            data=[[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12], [13, 14, 15], [16, 17, 18]],
+            coords={
+                'up': ("a", ['alpha', 'alpha', 'beta', 'beta', 'beta', 'beta']),
+                'down': ("a", [1, 1, 1, 1, 2, 2]),
+                'sideways': ('b', ['x', 'y', 'z'])
+            },
+            dims=['a', 'b']
+        )
+        assert "up" in da.coords
+        assert da["a"].variable.level_names == []
+        da = gather_indexes(da)
+        assert da.coords.variables["a"].level_names == ["up", "down"]
+        assert da["a"].variable.level_names == ["up", "down"]
+        da = DataArray(da)
+        assert da.coords.variables["a"].level_names == ["up", "down"]
+        assert da["up"] is not None
 
+    def test_wrap_dataassembly(self):
+        assy = DataAssembly(
+            data=[[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12], [13, 14, 15], [16, 17, 18]],
+            coords={
+                'up': ("a", ['alpha', 'alpha', 'beta', 'beta', 'beta', 'beta']),
+                'down': ("a", [1, 1, 1, 1, 2, 2]),
+                'sideways': ('b', ['x', 'y', 'z'])
+            },
+            dims=['a', 'b']
+        )
+        assert assy.coords.variables["a"].level_names == ["up", "down"]
+        assert assy["a"].variable.level_names == ["up", "down"]
+        da = DataArray(assy)
+        assert da.coords.variables["a"].level_names == ["up", "down"]
+        assert da["a"].variable.level_names == ["up", "down"]
+        assert da["up"] is not None
 
-def test_wrap_dataassembly():
-    assy = DataAssembly(
-        data=[[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12], [13, 14, 15], [16, 17, 18]],
-        coords={
-            'up': ("a", ['alpha', 'alpha', 'beta', 'beta', 'beta', 'beta']),
-            'down': ("a", [1, 1, 1, 1, 2, 2]),
-            'sideways': ('b', ['x', 'y', 'z'])
-        },
-        dims=['a', 'b']
-    )
-    assert assy.coords.variables["a"].level_names == ["up", "down"]
-    da = DataArray(assy)
-    assert da.coords.variables["a"].level_names == ["up", "down"]
+    def test_reset_index(self):
+        assy = DataAssembly(
+            data=[[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12], [13, 14, 15], [16, 17, 18]],
+            coords={
+                'up': ("a", ['alpha', 'alpha', 'beta', 'beta', 'beta', 'beta']),
+                'down': ("a", [1, 1, 1, 1, 2, 2]),
+                'sideways': ('b', ['x', 'y', 'z'])
+            },
+            dims=['a', 'b']
+        )
+        da = DataArray(assy)
+        da = da.reset_index(["up", "down"])
+        assert get_levels(da) == []
 
+    def test_repr(self):
+        assy = DataAssembly(
+            data=[[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12], [13, 14, 15], [16, 17, 18]],
+            coords={
+                'up': ("a", ['alpha', 'alpha', 'beta', 'beta', 'beta', 'beta']),
+                'down': ("a", [1, 1, 1, 1, 2, 2]),
+                'sideways': ('b', ['x', 'y', 'z'])
+            },
+            dims=['a', 'b']
+        )
+        assy_repr = repr(assy)
+        assert "up" in assy_repr
+        assert "down" in assy_repr
+        assert "sideways" in assy_repr
+        print(assy_repr)
 
-def test_reset_index():
-    assy = DataAssembly(
-        data=[[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12], [13, 14, 15], [16, 17, 18]],
-        coords={
-            'up': ("a", ['alpha', 'alpha', 'beta', 'beta', 'beta', 'beta']),
-            'down': ("a", [1, 1, 1, 1, 2, 2]),
-            'sideways': ('b', ['x', 'y', 'z'])
-        },
-        dims=['a', 'b']
-    )
-    da = DataArray(assy)
-    da = da.reset_index(["up", "down"])
-    assert get_levels(da) == []
+    def test_getitem(self):
+        assy = DataAssembly(
+            data=[[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12], [13, 14, 15], [16, 17, 18]],
+            coords={
+                'up': ("a", ['alpha', 'alpha', 'beta', 'beta', 'beta', 'beta']),
+                'down': ("a", [1, 1, 1, 1, 2, 2]),
+                'sideways': ('b', ['x', 'y', 'z'])
+            },
+            dims=['a', 'b']
+        )
+        single = assy[0, 0]
+        assert type(single) is type(assy)
 
 
 class TestIndex:
