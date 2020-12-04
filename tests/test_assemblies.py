@@ -1,7 +1,8 @@
 import pytest
+import xarray as xr
 from xarray import DataArray
 
-from brainio_base.assemblies import DataAssembly, get_levels, gather_indexes
+from brainio_base.assemblies import DataAssembly, get_levels, gather_indexes, is_fastpath
 
 
 def test_get_levels():
@@ -98,6 +99,29 @@ class TestSubclassing:
         )
         single = assy[0, 0]
         assert type(single) is type(assy)
+
+    def test_is_fastpath(self):
+        """In DataAssembly.__init__ we have to check whether fastpath is present in a set of arguments and true
+        or truthy (as interpreted by DataArray.__init__), even if only positional arguments are passed.  """
+        assert is_fastpath(0, None, None, None, None, None, True)
+        assert is_fastpath(0, None, None, None, None, None, fastpath=True)
+        assert is_fastpath(0, None, None, None, None, None, 1)
+        assert is_fastpath(0, None, None, None, None, None, fastpath=1)
+        assert not is_fastpath(0, None, None, None, None, None, False)
+        assert not is_fastpath(0, None, None, None, None, None, 0)
+        assert not is_fastpath(0, None, None, None, None, None, fastpath=False)
+        assert not is_fastpath(0, None, None, None, None, None, fastpath=0)
+        assert not is_fastpath(0, None, None, None, None, None)
+
+    def test_fastpath_signature_change(self):
+        """Make sure that xarray hasn't changed the signature of DataArray.__init__ (again),
+        because is_fastpath assumes a fixed length.  """
+        # If the number of parameters has decreased, this will error:
+        d = xr.DataArray(0, None, None, None, None, None, False)
+        # This should raise TypeError: "__init__() takes from 1 to 8 positional arguments but 9 were given"
+        with pytest.raises(TypeError) as te:
+            d = xr.DataArray(0, None, None, None, None, None, None, False)
+        assert "but 9" in str(te.value)
 
 
 class TestIndex:
