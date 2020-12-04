@@ -6,6 +6,12 @@ import xarray as xr
 from xarray import DataArray, IndexVariable
 
 
+def is_fastpath(*args, **kwargs):
+    """checks whether a set of args and kwargs would be interpreted by DataArray.__init__"""
+    n = 7 # maximum length of args if all arguments to DataArray are positional (as of 0.16.1)
+    return ("fastpath" in kwargs and kwargs["fastpath"]) or (len(args) >= n and args[n-1])
+
+
 class DataPoint(object):
     """A DataPoint represents one value, usually a recording from one neuron or node,
     in response to one presentation of a stimulus.  """
@@ -23,12 +29,18 @@ class DataAssembly(DataArray):
     __slots__ = ()
 
     def __init__(self, *args, **kwargs):
-        temp = DataArray(*args, **kwargs)
-        temp = gather_indexes(temp)
-        # This guarantees that DataAssemblies will always have all metadata as indexes.
-        # DataArray reset_index no longer has an inplace option, so an object that is a subclass
-        # of DataArray cannot modify itself in its __init__.
-        super(DataAssembly, self).__init__(temp)
+        if is_fastpath(*args, **kwargs):
+            # DataArray.__init__ follows a very different code path if fastpath=True
+            # gather_indexes is not necessary in those cases
+            super(DataAssembly, self).__init__(*args, **kwargs)
+        else:
+            # We call gather_indexes so we can guarantee that DataAssemblies will always have all metadata as indexes.
+            # set_index, and thus gather_indexes, cannot operate on self in-place, it can only return a new object.
+            # We take advantage of the almost-idempotence of DataArray.__init__ to gather indexes on a temporary
+            # object and then initialize self with that.
+            temp = DataArray(*args, **kwargs)
+            temp = gather_indexes(temp)
+            super(DataAssembly, self).__init__(temp)
 
     def multi_groupby(self, group_coord_names, *args, **kwargs):
         if len(group_coord_names) < 2:

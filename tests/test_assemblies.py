@@ -29,7 +29,7 @@ class TestSubclassing:
             dims=['a', 'b']
         )
         assert "up" in da.coords
-        assert da["a"].variable.level_names == []
+        assert da["a"].variable.level_names is None
         da = gather_indexes(da)
         assert da.coords.variables["a"].level_names == ["up", "down"]
         assert da["a"].variable.level_names == ["up", "down"]
@@ -74,15 +74,17 @@ class TestSubclassing:
             coords={
                 'up': ("a", ['alpha', 'alpha', 'beta', 'beta', 'beta', 'beta']),
                 'down': ("a", [1, 1, 1, 1, 2, 2]),
-                'sideways': ('b', ['x', 'y', 'z'])
+                'back': ('b', ['x', 'y', 'z']),
+                'forth': ('b', [True, True, False])
             },
             dims=['a', 'b']
         )
         assy_repr = repr(assy)
+        print(assy_repr)
         assert "up" in assy_repr
         assert "down" in assy_repr
-        assert "sideways" in assy_repr
-        print(assy_repr)
+        assert "back" in assy_repr
+        assert "forth" in assy_repr
 
     def test_getitem(self):
         assy = DataAssembly(
