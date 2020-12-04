@@ -122,6 +122,7 @@ class TestSubclassing:
         with pytest.raises(TypeError) as te:
             d = xr.DataArray(0, None, None, None, None, None, None, False)
         assert "but 9" in str(te.value)
+        # If they move fastpath to another spot in the list I guess it's tough.  
 
 
 class TestIndex:
